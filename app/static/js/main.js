@@ -549,6 +549,6 @@ function selectFooterCluster(clusterId) {
     if (radarEl) radarEl.innerText = p.radarAvg;
     if (codeBadgeEl) {
         codeBadgeEl.innerText = p.code;
-        codeBadgeEl.className = `inline-flex items-center px-3 py-1 rounded-full font-bold text-xs border ${p.badgeBg}`;
+        codeBadgeEl.className = `inline-flex items-center justify-center text-center whitespace-nowrap shrink-0 px-3.5 py-1 rounded-full font-bold text-xs border ${p.badgeBg}`;
     }
 }
