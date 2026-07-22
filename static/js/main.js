@@ -222,10 +222,10 @@ function updateToggleStyle(id) {
 
 // ----- Slider Text Labels -----
 const SLIDER_LABELS = {
-    Q3:   ['', 'สำคัญมากที่สุด', 'สำคัญปานกลาง', 'สำคัญน้อย', 'ไม่สำคัญเลย'],
+    Q3:   ['', 'ไม่สำคัญเลย', 'สำคัญน้อย', 'สำคัญมาก', 'สำคัญมากที่สุด'],
     Q41:  ['', 'เห็นด้วยอย่างยิ่ง', 'เห็นด้วยพอสมควร', 'ไม่ค่อยเห็นด้วย', 'ไม่เห็นด้วยเลย'],
-    Q50:  ['', 'ไม่พอใจมาก','ไม่พอใจ','ค่อนข้างไม่พอใจ','พอรับได้','กลางๆ','ค่อนข้างดี','ดี','พอใจมาก','พอใจมากที่สุด','ยอดเยี่ยมที่สุด'],
-    Q288: ['', 'ต่ำมากที่สุด','ต่ำมาก','ต่ำ','ต่ำกว่ากลาง','ระดับปานกลาง','สูงกว่ากลาง','ค่อนข้างสูง','สูงมาก','สูงมากที่สุด','ระดับสูงสุดของประเทศ'],
+    Q50:  ['', 'ไม่พอใจมากที่สุด', 'ไม่พอใจมาก', 'ไม่พอใจ', 'ค่อนข้างไม่พอใจ', 'ปานกลาง', 'ค่อนข้างดี', 'พอใจ', 'พอใจมาก', 'พอใจมากที่สุด', 'ยอดเยี่ยมที่สุด'],
+    Q288: ['', 'ต่ำสุด', 'ต่ำมาก', 'ต่ำ', 'ค่อนข้างต่ำ', 'ปานกลาง', 'ค่อนข้างสูง', 'สูง', 'สูงมาก', 'สูงมากที่สุด', 'สูงสุดในประเทศ'],
 };
 
 function updateSliderLabel(id) {
@@ -550,14 +550,5 @@ function selectFooterCluster(clusterId) {
     if (codeBadgeEl) {
         codeBadgeEl.innerText = p.code;
         codeBadgeEl.className = `inline-flex items-center px-3 py-1 rounded-full font-bold text-xs border ${p.badgeBg}`;
-    }
-
-    // Attach Preset Load Event to Button
-    const loadBtn = document.getElementById('footer-detail-load-btn');
-    if (loadBtn) {
-        loadBtn.onclick = function() {
-            loadPreset(p.presetKey);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
     }
 }

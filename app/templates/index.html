@@ -214,14 +214,14 @@
                         <!-- Q3 -->
                         <div class="bg-gradient-to-br from-blue-50/60 to-indigo-50/60 p-5 rounded-2xl border border-blue-100/80">
                             <label class="block text-sm font-semibold mb-1 text-gray-800">คุณให้ความสำคัญกับ <span class="text-brand-600">"เวลาว่าง"</span> ในชีวิตแค่ไหน?</label>
-                            <p class="text-xs text-gray-500 mb-3">เลื่อนสไลด์เพื่อระบุความสำคัญ</p>
+                            <p class="text-xs text-gray-500 mb-3">1 = ไม่สำคัญเลย, 4 = สำคัญมากที่สุด</p>
                             <div class="flex justify-between text-xs text-gray-400 mb-2 font-medium">
-                                <span>ไม่สำคัญเลย (1)</span><span>สำคัญมาก (4)</span>
+                                <span>ไม่สำคัญเลย (1)</span><span>สำคัญมากที่สุด (4)</span>
                             </div>
                             <input type="range" min="1" max="4" value="2" class="w-full" id="Q3"
                                 oninput="updateSliderLabel('Q3')">
                             <div class="flex justify-between items-center mt-2">
-                                <span id="Q3_text_label" class="text-xs text-gray-500 italic">สำคัญปานกลาง</span>
+                                <span id="Q3_text_label" class="text-xs text-gray-500 italic">สำคัญน้อย</span>
                                 <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">ระดับ <span id="Q3_val">2</span></span>
                             </div>
                         </div>
@@ -485,65 +485,59 @@
         <!-- =======================================================
              Interactive Persona Inspector (Footer Section)
              ======================================================= -->
-        <div class="mt-10 glass-panel rounded-3xl p-8 animate-slide-up anim-delay-3">
+        <div class="mt-10 glass-panel rounded-3xl p-6 sm:p-8 animate-slide-up anim-delay-3">
             
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-5">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        <h2 class="text-xl font-extrabold text-gray-800">คลังข้อมูลและรายละเอียด 5 กลุ่ม Persona</h2>
-                    </div>
-                    <p class="text-gray-500 text-xs">คลิกเลือกกลุ่มด้านล่างเพื่อตรวจสอบคำอธิบาย พฤติกรรม สินค้าแนะนำ และกลยุทธ์การตลาด</p>
+            <div class="mb-6 border-b border-gray-100 pb-4">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-5 h-5 text-brand-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-gray-800">คลังข้อมูลและรายละเอียด 5 กลุ่ม Persona</h2>
                 </div>
-                <button id="footer-detail-load-btn" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all self-start md:self-auto">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    โหลดข้อมูลเพื่อทดสอบกลุ่มนี้
-                </button>
+                <p class="text-gray-500 text-xs">คลิกเลือกกลุ่มด้านล่างเพื่อตรวจสอบคำอธิบาย พฤติกรรม สินค้าแนะนำ และกลยุทธ์การตลาด</p>
             </div>
 
             <!-- Tabs Selection -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 mb-6">
                 
-                <button id="footer-tab-0" onclick="selectFooterCluster(0)" class="footer-persona-tab active flex-1 p-3.5 rounded-2xl border transition-all text-left bg-white shadow-md border-brand-500 ring-2 ring-brand-500/20">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-blue-600">Cluster 0</span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                <button id="footer-tab-0" onclick="selectFooterCluster(0)" class="footer-persona-tab active p-3 rounded-2xl border transition-all text-left bg-white shadow-md border-brand-500 ring-2 ring-brand-500/20">
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="text-xs font-bold text-blue-600 shrink-0">Cluster 0</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
                     </div>
                     <h4 class="font-bold text-gray-900 text-xs truncate">The Leisure-First Dreamer</h4>
                     <p class="text-[11px] text-gray-500 mt-1 truncate">สายรักอิสระ</p>
                 </button>
 
-                <button id="footer-tab-1" onclick="selectFooterCluster(1)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-amber-600">Cluster 1</span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <button id="footer-tab-1" onclick="selectFooterCluster(1)" class="footer-persona-tab p-3 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="text-xs font-bold text-amber-600 shrink-0">Cluster 1</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
                     </div>
                     <h4 class="font-bold text-gray-900 text-xs truncate">The Vulnerable Spendthrift</h4>
                     <p class="text-[11px] text-gray-500 mt-1 truncate">สายสังคมกิจกรรม</p>
                 </button>
 
-                <button id="footer-tab-2" onclick="selectFooterCluster(2)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-emerald-600">Cluster 2</span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <button id="footer-tab-2" onclick="selectFooterCluster(2)" class="footer-persona-tab p-3 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="text-xs font-bold text-emerald-600 shrink-0">Cluster 2</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                     </div>
                     <h4 class="font-bold text-gray-900 text-xs truncate">The Financially Secure Elite</h4>
                     <p class="text-[11px] text-gray-500 mt-1 truncate">เศรษฐีเงียบมั่นคง</p>
                 </button>
 
-                <button id="footer-tab-3" onclick="selectFooterCluster(3)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-purple-600">Cluster 3</span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                <button id="footer-tab-3" onclick="selectFooterCluster(3)" class="footer-persona-tab p-3 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="text-xs font-bold text-purple-600 shrink-0">Cluster 3</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
                     </div>
                     <h4 class="font-bold text-gray-900 text-xs truncate">The Hard-Working Hustler</h4>
                     <p class="text-[11px] text-gray-500 mt-1 truncate">นักสู้เพื่ออนาคต</p>
                 </button>
 
-                <button id="footer-tab-4" onclick="selectFooterCluster(4)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-pink-600">Cluster 4</span>
-                        <span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                <button id="footer-tab-4" onclick="selectFooterCluster(4)" class="footer-persona-tab p-3 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="text-xs font-bold text-pink-600 shrink-0">Cluster 4</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-pink-500 shrink-0"></span>
                     </div>
                     <h4 class="font-bold text-gray-900 text-xs truncate">The Aspirational Underdog</h4>
                     <p class="text-[11px] text-gray-500 mt-1 truncate">สายทะเยอทะยาน</p>
