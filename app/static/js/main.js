@@ -8,11 +8,11 @@ let selectedFooterClusterId = 0;
 
 // ----- Preset Persona Data -----
 const PRESETS = {
-    dreamer: { Q3: 1, Q41: 4, Q50: 3, Q288: 3, Q287: "4", Q285: false, Q286: "1", hobby: false, label: "สายฝัน (Dreamer)", clusterId: 0 },
-    hustler:  { Q3: 4, Q41: 1, Q50: 6, Q288: 6, Q287: "2", Q285: true,  Q286: "2", hobby: true,  label: "สายลุย (Hustler)", clusterId: 3 },
-    saver:    { Q3: 2, Q41: 3, Q50: 8, Q288: 8, Q287: "1", Q285: true,  Q286: "3", hobby: false, label: "สายออม (Saver)", clusterId: 2 },
-    social:   { Q3: 2, Q41: 2, Q50: 4, Q288: 4, Q287: "3", Q285: false, Q286: "1", hobby: true,  label: "สายสังคม (Social)", clusterId: 1 },
-    aspire:   { Q3: 3, Q41: 3, Q50: 3, Q288: 3, Q287: "4", Q285: false, Q286: "2", hobby: false, label: "สายฝันใหญ่ (Aspire)", clusterId: 4 },
+    dreamer: { Q3: 4, Q41: 1, Q50: 5, Q288: 3, Q287: "3", Q285: false, Q286: "2", hobby: false, label: "สายรักอิสระและเวลาว่าง (Dreamer)", clusterId: 0 },
+    social:  { Q3: 1, Q41: 1, Q50: 8, Q288: 6, Q287: "3", Q285: false, Q286: "3", hobby: true,  label: "สายสังคมชอบสังสรรค์ (Spendthrift)", clusterId: 1 },
+    saver:   { Q3: 2, Q41: 1, Q50: 8, Q288: 6, Q287: "2", Q285: false, Q286: "1", hobby: true,  label: "สายเศรษฐีเงียบออมมั่นคง (Elite)", clusterId: 2 },
+    hustler: { Q3: 2, Q41: 4, Q50: 7, Q288: 5, Q287: "3", Q285: false, Q286: "3", hobby: true,  label: "สายลุยทุ่มเทเรื่องงาน (Hustler)", clusterId: 3 },
+    aspire:  { Q3: 1, Q41: 1, Q50: 4, Q288: 1, Q287: "5", Q285: false, Q286: "3", hobby: false, label: "สายทะเยอทะยานเน้นภาพลักษณ์ (Underdog)", clusterId: 4 },
 };
 
 // ----- Detailed Persona Profiles for Footer Inspector -----
