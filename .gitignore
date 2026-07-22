@@ -1,0 +1,31 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Environment & Virtualenvs
+venv/
+.venv/
+env/
+
+# Notebooks & Raw Data Files (Excluded from Production Deployment)
+*.ipynb
+*.ipynb_checkpoints
+app.zip
+analysis.txt
+notebook_extracted.py
+extract_notebook.py
+check_model.py
+test_model.py
+approx_scaler.py
+get_scaler_params.py
+
+# Redundant app duplicate folder if deploying from root
+# app/
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

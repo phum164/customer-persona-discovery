@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Persona Discovery Tool | Powered by WVS Data</title>
+    <meta name="description" content="เครื่องมือวิเคราะห์ตัวตนลูกค้าเชิงลึกด้วย AI KMeans Clustering จากข้อมูล World Values Survey">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Sarabun', 'Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 900: '#134e4a' },
+                        dark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Sarabun', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #e2e8f0 50%, #fdf4ff 100%);
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.93);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 40px -8px rgba(0, 0, 0, 0.10), 0 2px 8px -2px rgba(0,0,0,0.05);
+        }
+
+        /* Slide-up animation */
+        .animate-slide-up {
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .anim-delay-1 { animation-delay: 0.05s; }
+        .anim-delay-2 { animation-delay: 0.12s; }
+        .anim-delay-3 { animation-delay: 0.20s; }
+
+        /* Range slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 22px; width: 22px;
+            border-radius: 50%;
+            background: #0d9488;
+            cursor: pointer;
+            margin-top: -9px;
+            box-shadow: 0 2px 8px rgba(13, 148, 136, 0.45);
+            transition: transform 0.15s ease;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px;
+            background: linear-gradient(to right, #0d9488, #99f6e4);
+            border-radius: 3px;
+        }
+
+        /* Preset button styles */
+        .preset-btn {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            border: 1.5px solid #0d9488;
+            color: #0d9488;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            display: inline-flex;
+            items-center: center;
+            gap: 0.35rem;
+            background: white;
+            font-weight: 600;
+        }
+        .preset-btn:hover {
+            background: #0d9488;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+        }
+
+        /* Result pop animation */
+        .result-pop {
+            animation: resultPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes resultPop {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .footer-persona-tab.active {
+            box-shadow: 0 6px 20px -4px rgba(13, 148, 136, 0.25);
+        }
+    </style>
+</head>
+
+<body class="text-dark antialiased py-10 px-4">
+
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="text-center mb-10 animate-slide-up">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-brand-50 border border-brand-200 rounded-full text-brand-700 text-xs font-bold tracking-wider mb-4 shadow-sm">
+                <svg class="w-3.5 h-3.5 text-brand-600 animate-spin" style="animation-duration: 6s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                AI-POWERED PERSONA DISCOVERY TOOL
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-emerald-500 to-teal-400 mb-3 tracking-tight leading-tight">
+                Customer Persona Discovery
+            </h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto">เครื่องมือวิเคราะห์และค้นหาตัวตนลูกค้าเชิงลึก ด้วย AI KMeans Clustering จากข้อมูลสำรวจ World Values Survey (WVS)</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- ==============================
+                 Form Section (Left Panel)
+                 ============================== -->
+            <div class="lg:col-span-5 glass-panel rounded-3xl p-7 animate-slide-up anim-delay-1 flex flex-col">
+
+                <!-- Preset Buttons -->
+                <div class="mb-5">
+                    <div class="flex items-center gap-1.5 mb-2">
+                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                        </svg>
+                        <span class="text-xs text-gray-500 font-semibold uppercase tracking-wide">โหลดโปรไฟล์ตัวอย่างเพื่อทดสอบ</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="preset-btn" onclick="loadPreset('dreamer')">
+                            <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                            สายฝัน
+                        </button>
+                        <button class="preset-btn" onclick="loadPreset('hustler')">
+                            <svg class="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            สายลุย
+                        </button>
+                        <button class="preset-btn" onclick="loadPreset('saver')">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            สายออม
+                        </button>
+                        <button class="preset-btn" onclick="loadPreset('social')">
+                            <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            สายสังคม
+                        </button>
+                        <button class="preset-btn" onclick="loadPreset('aspire')">
+                            <svg class="w-3.5 h-3.5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                            สายฝันใหญ่
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="border-gray-100 mb-6">
+
+                <!-- Connected Stepper Progress Bar -->
+                <div class="relative mb-8 px-3">
+                    <!-- Line Container (spans exactly through vertical and horizontal center of Dot 1 to Dot 3) -->
+                    <div class="absolute top-[16px] left-[30px] right-[30px] h-1 bg-gray-200 rounded-full z-0 overflow-hidden">
+                        <!-- Active Progress Bar -->
+                        <div id="stepProgressBar" class="h-full bg-gradient-to-r from-brand-600 to-emerald-400 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
+                    </div>
+
+                    <!-- Step Dots -->
+                    <div class="relative z-10 flex justify-between items-center">
+                        <!-- Step 1 -->
+                        <button type="button" onclick="goToStep(1)" class="flex flex-col items-center group focus:outline-none">
+                            <div id="step-dot-1" class="step-dot w-9 h-9 rounded-full bg-brand-600 text-white font-bold text-sm flex items-center justify-center border-2 border-brand-600 shadow-md transition-all">1</div>
+                            <span id="step-label-1" class="text-xs font-bold text-brand-600 mt-2 transition-colors">1. การทำงาน</span>
+                        </button>
+                        <!-- Step 2 -->
+                        <button type="button" onclick="goToStep(2)" class="flex flex-col items-center group focus:outline-none">
+                            <div id="step-dot-2" class="step-dot w-9 h-9 rounded-full bg-gray-100 text-gray-400 font-bold text-sm flex items-center justify-center border-2 border-gray-200 transition-all">2</div>
+                            <span id="step-label-2" class="text-xs text-gray-400 mt-2 transition-colors">2. การเงิน</span>
+                        </button>
+                        <!-- Step 3 -->
+                        <button type="button" onclick="goToStep(3)" class="flex flex-col items-center group focus:outline-none">
+                            <div id="step-dot-3" class="step-dot w-9 h-9 rounded-full bg-gray-100 text-gray-400 font-bold text-sm flex items-center justify-center border-2 border-gray-200 transition-all">3</div>
+                            <span id="step-label-3" class="text-xs text-gray-400 mt-2 transition-colors">3. สังคม</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <form id="surveyForm" class="flex-1 flex flex-col">
+
+                    <!-- ===== STEP 1: Work-Life & Values ===== -->
+                    <div class="form-step space-y-5">
+                        <div class="flex items-center gap-2 mb-1 border-b border-gray-100 pb-2">
+                            <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
+                            <h3 class="font-bold text-gray-800 text-sm">ด้านการทำงานและเวลาว่าง</h3>
+                        </div>
+
+                        <!-- Q3 -->
+                        <div class="bg-gradient-to-br from-blue-50/60 to-indigo-50/60 p-5 rounded-2xl border border-blue-100/80">
+                            <label class="block text-sm font-semibold mb-1 text-gray-800">คุณให้ความสำคัญกับ <span class="text-brand-600">"เวลาว่าง"</span> ในชีวิตแค่ไหน?</label>
+                            <p class="text-xs text-gray-500 mb-3">เลื่อนสไลด์เพื่อระบุความสำคัญ</p>
+                            <div class="flex justify-between text-xs text-gray-400 mb-2 font-medium">
+                                <span>ไม่สำคัญเลย (1)</span><span>สำคัญมาก (4)</span>
+                            </div>
+                            <input type="range" min="1" max="4" value="2" class="w-full" id="Q3"
+                                oninput="updateSliderLabel('Q3')">
+                            <div class="flex justify-between items-center mt-2">
+                                <span id="Q3_text_label" class="text-xs text-gray-500 italic">สำคัญปานกลาง</span>
+                                <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">ระดับ <span id="Q3_val">2</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Q41 -->
+                        <div class="bg-gradient-to-br from-blue-50/60 to-indigo-50/60 p-5 rounded-2xl border border-blue-100/80">
+                            <label class="block text-sm font-semibold mb-1 text-gray-800">คุณเห็นด้วยไหมว่า <span class="text-brand-600">"งานต้องมาก่อนเสมอ"</span> แม้ไม่มีเวลาว่าง?</label>
+                            <p class="text-xs text-gray-500 mb-3">1 = เห็นด้วยอย่างยิ่ง, 4 = ไม่เห็นด้วยเลย</p>
+                            <div class="flex justify-between text-xs text-gray-400 mb-2 font-medium">
+                                <span>เห็นด้วยอย่างยิ่ง (1)</span><span>ไม่เห็นด้วยเลย (4)</span>
+                            </div>
+                            <input type="range" min="1" max="4" value="2" class="w-full" id="Q41"
+                                oninput="updateSliderLabel('Q41')">
+                            <div class="flex justify-between items-center mt-2">
+                                <span id="Q41_text_label" class="text-xs text-gray-500 italic">เห็นด้วยพอสมควร</span>
+                                <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">ระดับ <span id="Q41_val">2</span></span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button type="button" onclick="nextStep()"
+                                class="bg-gradient-to-r from-brand-600 to-emerald-500 hover:to-emerald-400 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-brand-500/25 transform transition hover:-translate-y-0.5 flex items-center gap-2 text-sm">
+                                ขั้นตอนถัดไป
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ===== STEP 2: Financial ===== -->
+                    <div class="form-step hidden space-y-5">
+                        <div class="flex items-center gap-2 mb-1 border-b border-gray-100 pb-2">
+                            <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">2</div>
+                            <h3 class="font-bold text-gray-800 text-sm">ด้านความมั่นคงทางการเงิน</h3>
+                        </div>
+
+                        <!-- Q50 -->
+                        <div class="bg-gradient-to-br from-emerald-50/60 to-teal-50/60 p-5 rounded-2xl border border-emerald-100/80">
+                            <label class="block text-sm font-semibold mb-1 text-gray-800">คุณ <span class="text-brand-600">พึงพอใจกับสถานะทางการเงิน</span> ปัจจุบันแค่ไหน?</label>
+                            <p class="text-xs text-gray-500 mb-3">1 = ไม่พอใจมากที่สุด, 10 = พอใจมากที่สุด</p>
+                            <div class="flex justify-between text-xs text-gray-400 mb-2 font-medium">
+                                <span>ไม่พอใจเลย (1)</span><span>พอใจมาก (10)</span>
+                            </div>
+                            <input type="range" min="1" max="10" value="5" class="w-full" id="Q50"
+                                oninput="updateSliderLabel('Q50')">
+                            <div class="flex justify-between items-center mt-2">
+                                <span id="Q50_text_label" class="text-xs text-gray-500 italic">กลางๆ</span>
+                                <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">ระดับ <span id="Q50_val">5</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Q288 -->
+                        <div class="bg-gradient-to-br from-emerald-50/60 to-teal-50/60 p-5 rounded-2xl border border-emerald-100/80">
+                            <label class="block text-sm font-semibold mb-1 text-gray-800"><span class="text-brand-600">รายได้รวมของครอบครัว</span> อยู่ในระดับไหน เทียบคนในประเทศ?</label>
+                            <p class="text-xs text-gray-500 mb-3">1 = ต่ำสุด, 10 = สูงสุด</p>
+                            <div class="flex justify-between text-xs text-gray-400 mb-2 font-medium">
+                                <span>ต่ำสุด (1)</span><span>สูงสุด (10)</span>
+                            </div>
+                            <input type="range" min="1" max="10" value="5" class="w-full" id="Q288"
+                                oninput="updateSliderLabel('Q288')">
+                            <div class="flex justify-between items-center mt-2">
+                                <span id="Q288_text_label" class="text-xs text-gray-500 italic">ระดับปานกลาง</span>
+                                <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full border border-brand-200">ระดับ <span id="Q288_val">5</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Q286 -->
+                        <div class="bg-gradient-to-br from-emerald-50/60 to-teal-50/60 p-5 rounded-2xl border border-emerald-100/80">
+                            <label class="block text-sm font-semibold mb-2 text-gray-800">สถานะ <span class="text-brand-600">เงินออมของครอบครัว</span> ในปีที่ผ่านมา?</label>
+                            <select id="Q286"
+                                class="w-full bg-white border border-emerald-200 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-sm">
+                                <option value="3">ออมเงินได้ (Saved)</option>
+                                <option value="2">พอใช้ไปวันๆ (Break-even)</option>
+                                <option value="1">ต้องกู้ยืม (In debt)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-between pt-2">
+                            <button type="button" onclick="prevStep()"
+                                class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-3 px-6 rounded-2xl transition flex items-center gap-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                ย้อนกลับ
+                            </button>
+                            <button type="button" onclick="nextStep()"
+                                class="bg-gradient-to-r from-brand-600 to-emerald-500 hover:to-emerald-400 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-brand-500/25 transform transition hover:-translate-y-0.5 flex items-center gap-2 text-sm">
+                                ขั้นตอนถัดไป
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ===== STEP 3: Social & Identity ===== -->
+                    <div class="form-step hidden space-y-5">
+                        <div class="flex items-center gap-2 mb-1 border-b border-gray-100 pb-2">
+                            <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold">3</div>
+                            <h3 class="font-bold text-gray-800 text-sm">ด้านสังคมและตัวตน</h3>
+                        </div>
+
+                        <!-- Q287 -->
+                        <div class="bg-gradient-to-br from-amber-50/60 to-orange-50/60 p-5 rounded-2xl border border-amber-100/80">
+                            <label class="block text-sm font-semibold mb-2 text-gray-800">คุณคิดว่าตัวเองอยู่ใน <span class="text-brand-600">ชนชั้นไหนของสังคม</span>?</label>
+                            <select id="Q287"
+                                class="w-full bg-white border border-amber-200 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 transition-shadow text-sm">
+                                <option value="1">ชนชั้นสูง (Upper Class)</option>
+                                <option value="2">ชนชั้นกลางระดับสูง (Upper-middle)</option>
+                                <option value="3" selected>ชนชั้นกลางระดับล่าง (Lower-middle)</option>
+                                <option value="4">ชนชั้นแรงงาน (Working class)</option>
+                                <option value="5">ชนชั้นล่าง (Lower class)</option>
+                            </select>
+                        </div>
+
+                        <!-- Q285 & Hobby -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div id="Q285_box" class="bg-gradient-to-br from-emerald-50 to-teal-50 p-4 rounded-2xl border-2 border-emerald-400 shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300">
+                                <label class="block text-xs font-semibold mb-3 text-gray-800">เป็นผู้หารายได้หลัก?</label>
+                                <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+                                    <input type="checkbox" id="Q285" class="sr-only peer" checked>
+                                    <div class="relative w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                                    <span class="text-xs font-bold text-emerald-700 min-w-[36px] text-left" id="Q285_text">ใช่</span>
+                                </label>
+                            </div>
+
+                            <div id="hobby_box" class="bg-gray-50/80 p-4 rounded-2xl border border-gray-200 flex flex-col items-center justify-center text-center transition-all duration-300">
+                                <label class="block text-xs font-semibold mb-3 text-gray-800">กลุ่มงานอดิเรก?</label>
+                                <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+                                    <input type="checkbox" id="hobby_membership" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+                                    <span class="text-xs font-medium text-gray-500 min-w-[36px] text-left" id="hobby_text">ไม่เป็น</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="flex justify-between pt-2">
+                            <button type="button" onclick="prevStep()"
+                                class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-3 px-6 rounded-2xl transition flex items-center gap-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                ย้อนกลับ
+                            </button>
+                            <button type="button" onclick="submitAnalysis()"
+                                class="bg-gradient-to-r from-brand-600 to-emerald-500 hover:to-emerald-400 text-white font-bold py-3 px-8 rounded-2xl shadow-xl shadow-brand-500/30 transform transition hover:-translate-y-1 flex items-center gap-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                ประมวลผลวิเคราะห์
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- ==============================
+                 Result Section (Right Panel)
+                 ============================== -->
+            <div class="lg:col-span-7 flex flex-col space-y-5">
+
+                <div class="glass-panel rounded-3xl p-8 flex flex-col items-center justify-center min-h-[420px] animate-slide-up anim-delay-2 relative overflow-hidden">
+
+                    <!-- Loading Overlay -->
+                    <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 rounded-3xl hidden z-10 backdrop-blur-sm">
+                        <div class="w-14 h-14 border-4 border-brand-100 border-t-brand-600 rounded-full animate-spin"></div>
+                        <p class="mt-4 font-bold text-brand-800 animate-pulse text-sm">กำลังประมวลผล AI Model...</p>
+                        <p class="text-xs text-gray-400 mt-1">กำลังคำนวณ Euclidean Distance & Softmax Probability</p>
+                    </div>
+
+                    <!-- Initial State -->
+                    <div id="initialState" class="text-center opacity-40 flex flex-col items-center py-10">
+                        <div class="w-20 h-20 mb-4 rounded-full bg-brand-50 flex items-center justify-center text-brand-600 border border-brand-100">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-gray-700 mb-1">ยังไม่ได้กรอกข้อมูล</h2>
+                        <p class="text-xs text-gray-500 max-w-xs">กรอกแบบสอบถาม 3 ขั้นตอนด้านซ้ายเพื่อวิเคราะห์และจัดกลุ่ม Persona</p>
+                    </div>
+
+                    <!-- Result Container -->
+                    <div id="resultContainer" class="w-full hidden flex-col result-pop">
+
+                        <!-- Persona Header -->
+                        <div class="flex flex-col items-center text-center mb-6">
+                            <div class="inline-flex items-center px-3.5 py-1 rounded-full bg-brand-50 text-brand-700 font-bold text-xs tracking-wider mb-3 border border-brand-200 shadow-sm">
+                                <span class="w-2 h-2 rounded-full bg-brand-500 mr-2 animate-pulse"></span>
+                                CUSTOMER PERSONA MATCH RESULT
+                            </div>
+                            <h2 id="clusterName" class="text-3xl lg:text-4xl font-extrabold text-gray-900 mb-3 leading-tight"></h2>
+                            <p id="clusterDesc" class="text-sm text-gray-600 bg-gray-50/80 px-6 py-3.5 rounded-2xl border border-gray-100 max-w-xl mb-5 leading-relaxed"></p>
+
+                            <!-- Match Score Bar -->
+                            <div class="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-4 shadow-sm mb-2">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                                        <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        Match Percentage
+                                    </span>
+                                    <span id="matchPercentage" class="text-2xl font-extrabold text-brand-600">-</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                                    <div id="matchBar" class="h-3 rounded-full w-0 bg-gradient-to-r from-brand-500 to-emerald-400 shadow-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Radar Chart -->
+                        <div class="w-full max-w-sm mx-auto aspect-square relative bg-white p-4 rounded-3xl shadow-sm border border-gray-100 mb-6">
+                            <canvas id="radarChart"></canvas>
+                        </div>
+
+                        <!-- Recommendation & Marketing Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div class="bg-gradient-to-br from-indigo-50/80 to-blue-50/80 rounded-2xl p-5 border border-blue-100 shadow-sm hover:shadow-md transition">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <div class="bg-blue-600 p-2 rounded-xl text-white">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                    </div>
+                                    <h3 class="font-bold text-gray-900 text-sm">สินค้า/บริการที่แนะนำ</h3>
+                                </div>
+                                <p id="clusterRec" class="text-gray-700 leading-relaxed text-xs font-medium"></p>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-purple-50/80 to-pink-50/80 rounded-2xl p-5 border border-pink-100 shadow-sm hover:shadow-md transition">
+                                <div class="flex items-center gap-2.5 mb-3">
+                                    <div class="bg-pink-600 p-2 rounded-xl text-white">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                                    </div>
+                                    <h3 class="font-bold text-gray-900 text-sm">ข้อความทางการตลาด (Tone)</h3>
+                                </div>
+                                <p id="clusterMarket" class="text-gray-700 leading-relaxed italic text-xs font-medium"></p>
+                            </div>
+                        </div>
+
+                        <!-- Top Clusters Comparison -->
+                        <div class="bg-gray-50/80 rounded-2xl p-5 border border-gray-100 mb-5">
+                            <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                เปรียบเทียบความใกล้เคียงกับทุกกลุ่ม
+                            </h3>
+                            <div id="topClustersContainer" class="space-y-2.5"></div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3 flex-wrap">
+                            <button onclick="copySummary()"
+                                class="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-5 rounded-2xl transition text-xs shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                คัดลอกสรุปผล
+                            </button>
+                            <button onclick="resetForm()"
+                                class="flex-1 flex items-center justify-center gap-2 bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold py-3 px-5 rounded-2xl border border-brand-200 transition text-xs shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                ทำแบบทดสอบใหม่
+                            </button>
+                        </div>
+
+                    </div><!-- /resultContainer -->
+                </div>
+            </div>
+
+        </div><!-- /grid -->
+
+        <!-- =======================================================
+             Interactive Persona Inspector (Footer Section)
+             ======================================================= -->
+        <div class="mt-10 glass-panel rounded-3xl p-8 animate-slide-up anim-delay-3">
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-5">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <h2 class="text-xl font-extrabold text-gray-800">คลังข้อมูลและรายละเอียด 5 กลุ่ม Persona</h2>
+                    </div>
+                    <p class="text-gray-500 text-xs">คลิกเลือกกลุ่มด้านล่างเพื่อตรวจสอบคำอธิบาย พฤติกรรม สินค้าแนะนำ และกลยุทธ์การตลาด</p>
+                </div>
+                <button id="footer-detail-load-btn" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all self-start md:self-auto">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    โหลดข้อมูลเพื่อทดสอบกลุ่มนี้
+                </button>
+            </div>
+
+            <!-- Tabs Selection -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                
+                <button id="footer-tab-0" onclick="selectFooterCluster(0)" class="footer-persona-tab active flex-1 p-3.5 rounded-2xl border transition-all text-left bg-white shadow-md border-brand-500 ring-2 ring-brand-500/20">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-bold text-blue-600">Cluster 0</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-xs truncate">The Leisure-First Dreamer</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 truncate">สายรักอิสระ</p>
+                </button>
+
+                <button id="footer-tab-1" onclick="selectFooterCluster(1)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-bold text-amber-600">Cluster 1</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-xs truncate">The Vulnerable Spendthrift</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 truncate">สายสังคมกิจกรรม</p>
+                </button>
+
+                <button id="footer-tab-2" onclick="selectFooterCluster(2)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-bold text-emerald-600">Cluster 2</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-xs truncate">The Financially Secure Elite</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 truncate">เศรษฐีเงียบมั่นคง</p>
+                </button>
+
+                <button id="footer-tab-3" onclick="selectFooterCluster(3)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-bold text-purple-600">Cluster 3</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-xs truncate">The Hard-Working Hustler</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 truncate">นักสู้เพื่ออนาคต</p>
+                </button>
+
+                <button id="footer-tab-4" onclick="selectFooterCluster(4)" class="footer-persona-tab flex-1 p-3.5 rounded-2xl border border-gray-200/80 transition-all text-left bg-white/60 hover:bg-white hover:border-gray-300">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-xs font-bold text-pink-600">Cluster 4</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-xs truncate">The Aspirational Underdog</h4>
+                    <p class="text-[11px] text-gray-500 mt-1 truncate">สายทะเยอทะยาน</p>
+                </button>
+
+            </div>
+
+            <!-- Active Selected Cluster Detailed Inspector -->
+            <div id="footer-detail-card" class="bg-gradient-to-br from-white to-gray-50/90 rounded-2xl p-6 border border-gray-200 shadow-sm">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-3">
+                        <span id="footer-detail-code" class="inline-flex items-center px-3 py-1 rounded-full font-bold text-xs border bg-blue-50 text-blue-700 border-blue-200">Cluster 0</span>
+                        <h3 id="footer-detail-title" class="text-xl font-extrabold text-gray-900">The Leisure-First Dreamer</h3>
+                    </div>
+                    <span id="footer-detail-tagline" class="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-lg self-start md:self-auto">สายรักอิสระและให้ความสำคัญกับเวลาว่าง</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mt-4">
+                    
+                    <div class="md:col-span-6 space-y-4">
+                        <div>
+                            <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                คำอธิบายพฤติกรรมและแนวคิด (Behavior Profile)
+                            </h5>
+                            <p id="footer-detail-desc" class="text-xs text-gray-700 leading-relaxed font-medium bg-white p-3.5 rounded-xl border border-gray-100 shadow-2xs">
+                                รักอิสระ ให้ความสำคัญกับความสุขส่วนตัวและการพักผ่อนมากกว่าการโหมทำงาน แต่รากฐานการเงินยังไม่มั่นคงนัก มีแนวโน้มใช้จ่ายกับความสุขเฉพาะหน้า
+                            </p>
+                        </div>
+
+                        <div>
+                            <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                ลักษณะคะแนนเด่น (Key Features Average)
+                            </h5>
+                            <p id="footer-detail-radar" class="text-xs text-gray-600 bg-white p-3 rounded-xl border border-gray-100 font-medium">
+                                เวลาว่างสำคัญสูง | งานต้องมาก่อนต่ำ | เงินออมและรายได้ปานกลาง-ต่ำ
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-6 space-y-4">
+                        <div>
+                            <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                สินค้าและบริการแนะนำ (Recommended Offerings)
+                            </h5>
+                            <p id="footer-detail-rec" class="text-xs text-gray-700 leading-relaxed font-medium bg-white p-3.5 rounded-xl border border-gray-100 shadow-2xs">
+                                บริการสตรีมมิ่งมัลติมีเดีย, แพ็กเกจท่องเที่ยวแนวประหยัด, สินค้าแฟชั่นราคาเข้าถึงง่าย, แอปพลิเคชันวางแผนการเงินขั้นเริ่มต้น
+                            </p>
+                        </div>
+
+                        <div>
+                            <h5 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+                                โทนภาษาและกลยุทธ์สื่อสาร (Marketing Strategy)
+                            </h5>
+                            <p id="footer-detail-market" class="text-xs text-gray-700 leading-relaxed font-medium italic bg-white p-3.5 rounded-xl border border-gray-100 shadow-2xs">
+                                "เติมเต็มความสุขวันนี้ โดยไม่ต้องรอให้รวย — ใช้โทนเป็นกันเอง เน้นความสุขในปัจจุบัน"
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div><!-- /max-w -->
+
+    <!-- JS Logic -->
+    <script src="/static/js/main.js?v=6"></script>
+    <script>
+        // Toggle listeners
+        document.getElementById('Q285').addEventListener('change', function () {
+            updateToggleStyle('Q285');
+        });
+        document.getElementById('hobby_membership').addEventListener('change', function () {
+            updateToggleStyle('hobby_membership');
+        });
+        
+        // Init step 1 & progress bar
+        goToStep(1);
+        
+        // Init slider labels & toggle styles
+        ['Q3','Q41','Q50','Q288'].forEach(id => updateSliderLabel(id));
+        updateToggleStyle('Q285');
+        updateToggleStyle('hobby_membership');
+        
+        // Init footer inspector to Cluster 0
+        selectFooterCluster(0);
+    </script>
+
+</body>
+
+</html>
